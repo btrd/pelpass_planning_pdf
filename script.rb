@@ -37,9 +37,11 @@ missions = Hash.new { |h, k| h[k] = [] }
   email = row['E-mail'].gsub("<html><u>", "").gsub("</u></html>", "")
   name = "#{row['Prénom']} #{row['Nom']}"
   phone = (row['Numéro de téléphone'] || "").gsub(" ", "")
+  lastname = row['Nom']
 
   missions[mission] << {
-    start: start_time, end: end_time, email: email, name: name, phone: phone
+    start: start_time, end: end_time, email: email, name: name,
+    phone: phone, lastname: lastname
   }
 end
 
@@ -130,6 +132,7 @@ missions.each do |mission_name, tasks|
         end: [t[:end], day_end].min,
         email: t[:email],
         name: t[:name],
+        lastname: t[:lastname],
         phone: t[:phone]
       }
     end
@@ -138,7 +141,10 @@ missions.each do |mission_name, tasks|
     grouped = visible_tasks.group_by { |t| t[:email] }
     visible_tasks_grouped = grouped.flat_map do |email, intervals|
       intervals.map do |i|
-        { start: i[:start], end: i[:end], name: i[:name], phone: i[:phone], email: email }
+        {
+          start: i[:start], end: i[:end], name: i[:name], phone: i[:phone],
+          lastname: i[:lastname], email: email
+        }
       end
     end
 
@@ -152,7 +158,9 @@ missions.each do |mission_name, tasks|
       show_page_header(pdf, day, mission_name, day_start, day_end)
 
       # Groupe par personne
-      grouped_by_email = visible_tasks_grouped.group_by { |t| t[:email] }
+      grouped_by_email = visible_tasks_grouped
+        .sort_by { |t| t[:lastname] }
+        .group_by { |t| t[:email] }
 
       # Cette boucle traite chaque personne individuellement pour dessiner leurs créneaux horaires.
       grouped_by_email.each_with_index do |(email, tasks), index|
