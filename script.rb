@@ -9,7 +9,7 @@ Prawn::Fonts::AFM.hide_m17n_warning = true
 # === CONFIGURATION ===
 # Nom du fichier Excel en entrée
 INPUT_XLSX = '5870-pelpass-festival-8---2025.xlsx'
-MINUTES_PER_PIXEL = 1.5      # Échelle de temps : 1 pixel = 1 minute
+MINUTES_PER_PIXEL = 1.2    # Échelle de temps : 1.2 pixel = 1 minute
 ROW_HEIGHT = 20            # Hauteur de chaque ligne représentant une personne
 LEFT_MARGIN = 200          # Marge gauche réservée pour le nom
 TIME_STEP_MINUTES = 60     # Intervalle entre les lignes horaires
@@ -28,24 +28,30 @@ missions = Hash.new { |h, k| h[k] = [] }
 (2..sheet.last_row).each do |i|
   row = Hash[[headers, sheet.row(i)].transpose]
 
+  # On ne génère pas les PDF pour les référents
+  next if row['Catégorie'] == '9. Référents'
+
   mission = row['Mission']
   start_time = DateTime.parse(row['Date de début'].to_s)
   end_time = DateTime.parse(row['Date de fin'].to_s)
   email = row['E-mail'].gsub("<html><u>", "").gsub("</u></html>", "")
   name = "#{row['Prénom']} #{row['Nom']}"
-  phone = row['Numéro de téléphone'].gsub(" ", "")
+  phone = (row['Numéro de téléphone'] || "").gsub(" ", "")
 
   missions[mission] << {
     start: start_time, end: end_time, email: email, name: name, phone: phone
   }
 end
 
-# Fonction pour définir le "jour logique" (08h00 → 07h59 du lendemain) TODO ne fonctionne pas
+# Fonction pour définir le "jour logique" (08h00 → 07h59 du lendemain)
 def logical_day(datetime)
   return (datetime.hour < 8 ? (datetime.to_date - 1) : datetime.to_date)
 end
 
 # Affiche le header pour chaque page de PDF
+# Affiche les lignes horaires et l'entête de mission/jour
+# Ajoute aussi des lignes verticales horaires toutes les heures
+
 def show_page_header(pdf, day, mission_name, day_start, day_end)
   pdf.font_size(10)
   pdf.text("#{day.strftime('%d %B')} -- #{mission_name}", size: 13, style: :bold)
@@ -76,7 +82,11 @@ missions.each do |mission_name, tasks|
   next if tasks.empty?
 
   # Nettoyage du nom pour un nom de dossier valide
-  safe_mission = mission_name.gsub(/[^\w\-]/, '_')
+  safe_mission = mission_name.downcase
+    .tr("éèêëàâäîïôöùûüç", "eeeeaaaiioouuuc")
+    .gsub(/[^a-z0-9\-]+/, '_')   # Remplace les caractères non autorisés par "_"
+    .gsub(/_+/, '_')             # Réduit les répétitions d'underscore
+    .gsub(/^_|_$/, '')           # Supprime les underscores en début/fin
   mission_dir = File.join(OUTPUT_DIR, safe_mission)
   FileUtils.mkdir_p(mission_dir)
 
@@ -86,10 +96,12 @@ missions.each do |mission_name, tasks|
   end.uniq.sort
 
   all_logical_days.each do |day|
-    # Sélectionner les tâches actives durant ce jour logique
+    jour_debut = DateTime.new(day.year, day.month, day.day, 8, 0, 0)
+    jour_fin = DateTime.new(day.year, day.month, day.day, 7, 59, 59) + 1
+
+    # Sélectionner les tâches actives durant ce jour logique (8h → 07h59 du lendemain)
     tasks_for_day = tasks.select do |t|
-      (t[:end] > DateTime.new(day.year, day.month, day.day, 0, 0, 0)) &&
-      (t[:start] < DateTime.new(day.year, day.month, day.day, 23, 59, 59))
+      (t[:end] > jour_debut) && (t[:start] < jour_fin)
     end
 
     next if tasks_for_day.empty?
@@ -98,26 +110,9 @@ missions.each do |mission_name, tasks|
     earliest_start = tasks_for_day.map { |t| t[:start] }.min
     latest_end = tasks_for_day.map { |t| t[:end] }.max
 
-    # Heure de début réelle ou 8h00 (si avant, on force à 8h00)
-    day_start = DateTime.new(
-      day.year, day.month, day.day, earliest_start.hour, earliest_start.min,
-      earliest_start.sec
-    )
-    if (day_start.hour < 8)
-      day_start = DateTime.new(
-        day.year, day.month, day.day, 8, 0, 0
-      )
-    end
-
-    # Heure de fin réelle ou 07h59 du lendemain (si après, on limite)
-    day_end = DateTime.new(
-      latest_end.year, latest_end.month, latest_end.day, latest_end.hour,
-      latest_end.min, latest_end.sec
-    )
-    limite_max = DateTime.new(day.year, day.month, day.day, 7, 59, 59) + 1
-    if (day_end > limite_max)
-      day_end = limite_max
-    end
+    # Ajustement aux bornes logiques
+    day_start = [jour_debut, earliest_start].max
+    day_end = [jour_fin, latest_end].min
 
     # Filtrer à nouveau selon les bornes réelles retenues TODO pourquoi ?
     tasks_for_day = tasks.select do |t|
@@ -139,7 +134,7 @@ missions.each do |mission_name, tasks|
       }
     end
 
-    # On garde les créneaux séparés pour une même personne
+    # Regroupement des créneaux par personne sans fusion
     grouped = visible_tasks.group_by { |t| t[:email] }
     visible_tasks_grouped = grouped.flat_map do |email, intervals|
       intervals.map do |i|
