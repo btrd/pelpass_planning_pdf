@@ -9,7 +9,7 @@ Prawn::Fonts::AFM.hide_m17n_warning = true
 # === CONFIGURATION ===
 # Nom du fichier Excel en entrée
 INPUT_XLSX = '5870-pelpass-festival-8---2025.xlsx'
-MINUTES_PER_PIXEL = 1.2    # Échelle de temps : 1.2 pixel = 1 minute
+MINUTES_PER_PIXEL = 1.7    # Échelle de temps : 1.2 pixel = 1 minute
 ROW_HEIGHT = 20            # Hauteur de chaque ligne représentant une personne
 LEFT_MARGIN = 200          # Marge gauche réservée pour le nom
 TIME_STEP_MINUTES = 60     # Intervalle entre les lignes horaires
