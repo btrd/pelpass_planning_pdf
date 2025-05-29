@@ -20,16 +20,17 @@ COLORS = %w[007ACC FFC107 4CAF50 E91E63 9C27B0 FF5722 795548 3F51B5]
 # === CHARGEMENT DU FICHIER XLSX ===
 xlsx = Roo::Spreadsheet.open(INPUT_XLSX)
 sheet = xlsx.sheet(0)
-headers = sheet.row(1).map(&:to_s)  # Entêtes du tableau Excel
+headers = sheet.row(2).map(&:to_s)  # Entêtes du tableau Excel
 
 # Regrouper les tâches par mission
 missions = Hash.new { |h, k| h[k] = [] }
 
-(2..sheet.last_row).each do |i|
+(3..sheet.last_row).each do |i|
   row = Hash[[headers, sheet.row(i)].transpose]
 
   # On ne génère pas les PDF pour les référents
   next if row['Catégorie'] == '9. Référents'
+  next if row["Statut d'affectation"] == "N'est pas applicable"
 
   mission = row['Mission']
   start_time = DateTime.parse(row['Date de début'].to_s)
@@ -150,6 +151,7 @@ missions.each do |mission_name, tasks|
 
     email_to_color = {}  # Association email → couleur
     filename = File.join(mission_dir, "#{day}.pdf")
+    next unless day.to_s == "2025-05-29"
 
     # === CRÉATION DU PDF ===
     Prawn::Document.generate(
