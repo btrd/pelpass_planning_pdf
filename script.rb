@@ -29,11 +29,13 @@ missions = Hash.new { |h, k| h[k] = [] }
   row = Hash[[headers, sheet.row(i)].transpose]
 
   # On ne génère pas les PDF pour les référents
-  next if row['Catégorie'] == '9. Référents'
+  next if row["Catégorie"] == "9. Référents"
   next if row["Statut d'affectation"] == "N'est pas applicable"
   next if row["Statut d'affectation"] == "En attente d'affectation"
 
   mission = row['Mission']
+
+  # binding.pry if row['Date de début'].to_s == ""
   start_time = DateTime.parse(row['Date de début'].to_s)
   end_time = DateTime.parse(row['Date de fin'].to_s)
   email = row['E-mail'].gsub("<html><u>", "").gsub("</u></html>", "")
