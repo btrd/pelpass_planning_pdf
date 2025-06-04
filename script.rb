@@ -31,6 +31,7 @@ missions = Hash.new { |h, k| h[k] = [] }
   # On ne génère pas les PDF pour les référents
   next if row['Catégorie'] == '9. Référents'
   next if row["Statut d'affectation"] == "N'est pas applicable"
+  next if row["Statut d'affectation"] == "En attente d'affectation"
 
   mission = row['Mission']
   start_time = DateTime.parse(row['Date de début'].to_s)
@@ -151,7 +152,7 @@ missions.each do |mission_name, tasks|
 
     email_to_color = {}  # Association email → couleur
     filename = File.join(mission_dir, "#{day}.pdf")
-    next unless day.to_s == "2025-05-29"
+    next unless day.to_s == "2025-06-01"
 
     # === CRÉATION DU PDF ===
     Prawn::Document.generate(
