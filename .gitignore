@@ -1,5 +1,7 @@
 
 *.xlsx
+*.csv
 *.numbers
 .DS_Store
 planning
+planning.zip

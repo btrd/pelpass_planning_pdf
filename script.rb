@@ -2,13 +2,13 @@ require('roo')
 require('prawn')
 require('date')
 require('fileutils')
-require('pry')
+require('debug')
 
 Prawn::Fonts::AFM.hide_m17n_warning = true
 
 # === CONFIGURATION ===
 # Nom du fichier Excel en entrée
-INPUT_XLSX = '5870-pelpass-festival-8---2025.xlsx'
+INPUT_XLSX = '7074-paye-ton-noel-19---2025.xlsx'
 MINUTES_PER_PIXEL = 1.7    # Échelle de temps : 1.2 pixel = 1 minute
 ROW_HEIGHT = 20            # Hauteur de chaque ligne représentant une personne
 LEFT_MARGIN = 200          # Marge gauche réservée pour le nom
@@ -20,12 +20,12 @@ COLORS = %w[007ACC FFC107 4CAF50 E91E63 9C27B0 FF5722 795548 3F51B5]
 # === CHARGEMENT DU FICHIER XLSX ===
 xlsx = Roo::Spreadsheet.open(INPUT_XLSX)
 sheet = xlsx.sheet(0)
-headers = sheet.row(2).map(&:to_s)  # Entêtes du tableau Excel
+headers = sheet.row(1).map(&:to_s)  # Entêtes du tableau Excel
 
 # Regrouper les tâches par mission
 missions = Hash.new { |h, k| h[k] = [] }
 
-(3..sheet.last_row).each do |i|
+(2..sheet.last_row).each do |i|
   row = Hash[[headers, sheet.row(i)].transpose]
 
   # On ne génère pas les PDF pour les référents
@@ -35,7 +35,7 @@ missions = Hash.new { |h, k| h[k] = [] }
 
   mission = row['Mission']
 
-  # binding.pry if row['Date de début'].to_s == ""
+  # debugger if row['Date de début'].to_s == ""
   start_time = DateTime.parse(row['Date de début'].to_s)
   end_time = DateTime.parse(row['Date de fin'].to_s)
   email = row['E-mail'].gsub("<html><u>", "").gsub("</u></html>", "")
@@ -154,7 +154,7 @@ missions.each do |mission_name, tasks|
 
     email_to_color = {}  # Association email → couleur
     filename = File.join(mission_dir, "#{day}.pdf")
-    next unless day.to_s == "2025-06-01"
+    # next unless day.to_s == "2025-06-01"
 
     # === CRÉATION DU PDF ===
     Prawn::Document.generate(
