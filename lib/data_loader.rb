@@ -10,7 +10,7 @@ module Planning
       missions = Hash.new { |h, k| h[k] = [] }
 
       @csv_content.each do |row|
-        next if row["Categorie"].downcase.include?("referent")
+        next if row["Catégorie"].downcase.include?("referent")
 
         status = row["Statut d'affectation"]
         next if status == "N'est pas applicable" || status == "En attente d'affectation"
