@@ -10,9 +10,8 @@ module Planning
       missions = Hash.new { |h, k| h[k] = [] }
 
       @csv_content.each do |row|
+        # Skip non assigned volunteers
         next unless row["Statut d'affectation"] == "Affecté"
-
-        mission = row["Mission"]
 
         start_time = begin
           DateTime.parse(row["Date de début"])
@@ -31,6 +30,7 @@ module Planning
         phone = (row["Numéro de téléphone"] || "").delete(" ")
         lastname = row["Nom"]
 
+        mission = row["Mission"]
         missions[mission] << {
           start: start_time, end: end_time, email: email, name: name,
           phone: phone, lastname: lastname
@@ -42,6 +42,7 @@ module Planning
       missions.each do |mission_name, tasks|
         next if tasks.empty?
 
+        # Get all logical days covered by tasks
         all_logical_days = tasks.flat_map do |t|
           (logical_day(t[:start])..logical_day(t[:end])).to_a
         end.uniq.sort
@@ -90,6 +91,7 @@ module Planning
 
     private
 
+    # 8 AM cutoff for logical day, e.g. 2024-06-10 07:59 is logical day 2024-06-09
     def logical_day(datetime)
       (datetime.hour < 8) ? (datetime.to_date - 1) : datetime.to_date
     end

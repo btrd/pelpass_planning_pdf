@@ -1,0 +1,16 @@
+[Unit]
+Description=Pelpass Planning PDF
+After=network.target
+
+[Service]
+Type=simple
+WorkingDirectory=/home/jean/pelpass_planning_pdf
+Environment="APP_ENV=production"
+ExecStart=ruby server.rb
+Restart=always
+RestartSec=1
+StandardOutput=journal
+StandardError=inherit
+
+[Install]
+WantedBy=default.target

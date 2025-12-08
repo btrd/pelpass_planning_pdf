@@ -7,7 +7,6 @@ gem "standard"
 gem "rackup"
 gem "puma"
 
-
 group :development, :test do
   gem "minitest"
   gem "rake"

@@ -1,4 +1,6 @@
-require 'zip'
+require "zip"
+
+# Lib copy from https://github.com/rubyzip/rubyzip/blob/main/samples/example_recursive.rb
 
 # This is a simple example which uses rubyzip to
 # recursively generate a zip file from the contents of
@@ -23,7 +25,7 @@ module Planning
       entries = Dir.entries(@input_dir) - %w[. ..]
 
       ::Zip::File.open(@output_file, create: true) do |zipfile|
-        write_entries entries, '', zipfile
+        write_entries entries, "", zipfile
       end
     end
 
@@ -32,7 +34,7 @@ module Planning
     # A helper method to make the recursion work.
     def write_entries(entries, path, zipfile)
       entries.each do |e|
-        zipfile_path = path == '' ? e : File.join(path, e)
+        zipfile_path = (path == "") ? e : File.join(path, e)
         disk_file_path = File.join(@input_dir, zipfile_path)
 
         if File.directory? disk_file_path

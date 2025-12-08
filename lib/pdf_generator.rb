@@ -5,15 +5,17 @@ MINUTES_PER_PIXEL = 1.7
 ROW_HEIGHT = 20
 LEFT_MARGIN = 200
 TIME_STEP_MINUTES = 60
+MAX_BY_PAGE = 22
 COLORS = %w[007ACC FFC107 4CAF50 E91E63 9C27B0 FF5722 795548 3F51B5]
+
+# Suppress Prawn font warning
+Prawn::Fonts::AFM.hide_m17n_warning = true
 
 module Planning
   class PdfGenerator
     def initialize(missions, output_dir)
       @missions = missions
       @output_dir = output_dir
-
-      Prawn::Fonts::AFM.hide_m17n_warning = true
     end
 
     def generate_all
@@ -32,6 +34,7 @@ module Planning
 
     private
 
+    # Sanitize mission name to be filesystem-safe
     def sanitize_name(name)
       name.to_s.downcase
         .tr("éèêëàâäîïôöùûüç", "eeeeaaaiioouuuc")
@@ -58,6 +61,7 @@ module Planning
         pdf.fill_color("000000")
         pdf.draw_text(hour_label, at: [x - 12, y_origin + 14])
 
+        # Advance time by TIME_STEP_MINUTES minutes
         current_time += Rational(TIME_STEP_MINUTES, 24 * 60)
       end
     end
@@ -75,9 +79,10 @@ module Planning
         show_page_header(pdf, day, mission_name, day_start, day_end)
 
         grouped_by_email.each_with_index do |(email, tasks), index|
-          y = pdf.cursor - (index % 22 * ROW_HEIGHT)
+          y = pdf.cursor - (index % MAX_BY_PAGE * ROW_HEIGHT)
 
-          if index % 22 == 0 && index != 0
+          # New page if needed
+          if index % MAX_BY_PAGE == 0 && index != 0
             pdf.start_new_page
             show_page_header(pdf, day, mission_name, day_start, day_end)
             y = pdf.cursor
@@ -85,8 +90,12 @@ module Planning
 
           pdf.text_box(
             "#{tasks[0][:phone]} - #{tasks[0][:name]}",
-            at: [0, y], width: LEFT_MARGIN - 10, height: ROW_HEIGHT,
-            valign: :center, align: :left, size: 10
+            at: [0, y],
+            width: LEFT_MARGIN - 10,
+            height: ROW_HEIGHT,
+            valign: :center,
+            align: :left,
+            size: 10
           )
 
           email_to_color[email] ||= COLORS[email_to_color.size % COLORS.size]
@@ -102,8 +111,10 @@ module Planning
 
             label = "#{task[:start].strftime("%H:%M")} - #{task[:end].strftime("%H:%M")}"
             pdf.fill_color("000000")
-            pdf.text_box(label, at: [bar_x + 2, y], width: bar_width - 4, height: ROW_HEIGHT,
-              size: 8, overflow: :shrink_to_fit, valign: :center, align: :center)
+            pdf.text_box(
+              label, at: [bar_x + 2, y], width: bar_width - 4, height: ROW_HEIGHT,
+              size: 8, overflow: :shrink_to_fit, valign: :center, align: :center
+            )
 
             pdf.fill_color(email_to_color[email])
           end
@@ -113,8 +124,6 @@ module Planning
           pdf.fill_color("000000")
         end
       end
-
-      puts("✅ PDF généré : #{filename}")
     end
   end
 end
