@@ -7,7 +7,7 @@ A Ruby script that generates visual PDF schedules from an Excel file containing 
 - Ruby (tested with recent versions)
 - Required gems:
   ```bash
-  gem install roo prawn
+  gem install prawn
   ```
 
 ## Configuration
@@ -16,7 +16,7 @@ Edit the following constants at the top of `script.rb` to customize behavior:
 
 | Constant | Default | Description |
 |----------|---------|-------------|
-| `INPUT_XLSX` | `'5870-pelpass-festival-8---2025.xlsx'` | Input Excel file name |
+| `INPUT_CSV` | `'7074-paye-ton-noel-19---2025.csv'` | Input CSV file name |
 | `MINUTES_PER_PIXEL` | `1.7` | Time scale (pixels per minute) |
 | `ROW_HEIGHT` | `20` | Height of each person's row in pixels |
 | `LEFT_MARGIN` | `200` | Space reserved for names/contact info |
@@ -26,23 +26,23 @@ Edit the following constants at the top of `script.rb` to customize behavior:
 
 ## Input File Format
 
-The script expects an Excel file (`.xlsx`) with the following structure:
 
-### Required Columns (Row 2 - headers):
+The script expects a CSV file with a header row and the following columns (header names must match):
+
+### Required Columns (header names):
 - **Mission**: Mission/task name
 - **Prénom**: First name
 - **Nom**: Last name
 - **E-mail**: Email address (used as unique identifier)
 - **Numéro de téléphone**: Phone number
-- **Date de début**: Start date/time
+- **Date de début**: Start date/time (parseable by Ruby's DateTime)
 - **Date de fin**: End date/time
 - **Catégorie**: Category (rows with "9. Référents" are skipped)
 - **Statut d'affectation**: Assignment status
 
 ### Data Structure:
-- Row 1: (Ignored)
-- Row 2: Column headers
-- Row 3+: Assignment data
+- First line: header row
+- Following lines: assignment rows
 
 ### Filters Applied:
 The script excludes:
@@ -53,7 +53,7 @@ The script excludes:
 ## How It Works
 
 ### 1. Data Processing
-- Reads Excel file using `roo` gem
+- Reads CSV using Ruby's `CSV` standard library
 - Groups assignments by mission
 - Calculates "logical days" (8:00 AM to 7:59 AM next day)
 - Filters and validates assignment data
@@ -83,8 +83,8 @@ Mission names are sanitized (lowercased, special characters removed) for folder 
 
 ## Usage
 
-1. Place your Excel file in the same directory as `script.rb`
-2. Update `INPUT_XLSX` constant if your file has a different name
+1. Place your CSV file in the same directory as `script.rb` (or update `INPUT_CSV` in `script.rb`)
+2. Update `INPUT_CSV` constant if your file has a different name
 3. Run the script:
    ```bash
    ruby script.rb

@@ -1,4 +1,4 @@
-require ('zip')
+require("zip")
 
 class ZipFileGenerator
   # Initialize with the directory to zip and the location of the output archive.
@@ -12,7 +12,7 @@ class ZipFileGenerator
     entries = Dir.entries(@input_dir) - %w[. ..]
 
     ::Zip::File.open(@output_file, create: true) do |zipfile|
-      write_entries entries, '', zipfile
+      write_entries entries, "", zipfile
     end
   end
 
@@ -21,7 +21,7 @@ class ZipFileGenerator
   # A helper method to make the recursion work.
   def write_entries(entries, path, zipfile)
     entries.each do |e|
-      zipfile_path = path == '' ? e : File.join(path, e)
+      zipfile_path = (path == "") ? e : File.join(path, e)
       disk_file_path = File.join(@input_dir, zipfile_path)
 
       if File.directory? disk_file_path

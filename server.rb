@@ -1,5 +1,5 @@
-require('sinatra')
+require("sinatra")
 
-get '/pelpass' do
+get "/pelpass" do
   "Pelpass est opérationnel !"
 end
