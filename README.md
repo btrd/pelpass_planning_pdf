@@ -1,131 +1,77 @@
 # Planning PDF Generator
 
-A Ruby script that generates visual PDF schedules from an Excel file containing volunteer assignments. The script creates one PDF per mission and day, with timeline visualizations showing when each person is scheduled to work.
+A small Ruby tool that converts a CSV of volunteer assignments into per-mission, per-day PDF schedules.
 
-## Prerequisites
+This README reflects the refactor: input is CSV, parsing is handled by `Planning::DataLoader`, rendering by `Planning::PdfGenerator`, and `script.rb` orchestrates both.
 
-- Ruby (tested with recent versions)
-- Required gems:
-  ```bash
-  gem install prawn
-  ```
+**Prerequisites**
 
-## Configuration
+- Ruby (3.x recommended)
 
-Edit the following constants at the top of `script.rb` to customize behavior:
+```bash
+bundle install
+```
 
-| Constant | Default | Description |
-|----------|---------|-------------|
-| `INPUT_CSV` | `'7074-paye-ton-noel-19---2025.csv'` | Input CSV file name |
-| `MINUTES_PER_PIXEL` | `1.7` | Time scale (pixels per minute) |
-| `ROW_HEIGHT` | `20` | Height of each person's row in pixels |
-| `LEFT_MARGIN` | `200` | Space reserved for names/contact info |
-| `TIME_STEP_MINUTES` | `60` | Interval between hour markers |
-| `OUTPUT_DIR` | `'planning'` | Output directory for PDFs |
-| `COLORS` | `[array]` | Color palette for volunteer assignments |
+**Entry points**
 
-## Input File Format
+- `script.rb` — orchestration: loads data with `Planning::DataLoader` and calls `Planning::PdfGenerator` to write PDFs (and optionally creates a ZIP).
+- `lib/planning/data_loader.rb` — CSV parsing and per-day grouping.
+- `lib/planning/pdf_generator.rb` — PDF rendering using Prawn.
+- `Rakefile` — includes `rake test` and `rake generate` (runs `script.rb`).
 
+**How to run**
 
-The script expects a CSV file with a header row and the following columns (header names must match):
+Run tests:
 
-### Required Columns (header names):
-- **Mission**: Mission/task name
-- **Prénom**: First name
-- **Nom**: Last name
-- **E-mail**: Email address (used as unique identifier)
-- **Numéro de téléphone**: Phone number
-- **Date de début**: Start date/time (parseable by Ruby's DateTime)
-- **Date de fin**: End date/time
-- **Catégorie**: Category (rows with "9. Référents" are skipped)
-- **Statut d'affectation**: Assignment status
+```bash
+bundle exec rake test
+```
 
-### Data Structure:
-- First line: header row
-- Following lines: assignment rows
+Generate PDFs:
 
-### Filters Applied:
-The script excludes:
-- Assignments with category "9. Référents"
-- Status "N'est pas applicable"
-- Status "En attente d'affectation"
+```bash
+bundle exec rake generate
+```
 
-## How It Works
+**CSV format (exact headers required)**
 
-### 1. Data Processing
-- Reads CSV using Ruby's `CSV` standard library
-- Groups assignments by mission
-- Calculates "logical days" (8:00 AM to 7:59 AM next day)
-- Filters and validates assignment data
+The loader expects a CSV with a header row using these exact column names (no normalization):
 
-### 2. PDF Generation
-For each mission and logical day:
-- Creates a landscape A4 PDF
-- Draws timeline with hourly markers
-- Plots each person's shifts as colored bars
-- Displays contact information on the left
-- Handles multi-page layouts (22 people per page)
+- `Mission` — mission/task identifier
+- `Prenom` — first name
+- `Nom` — last name
+- `E-mail` — email (used as unique identifier)
+- `Numero de telephone` — phone number
+- `Date de debut` — start date/time (ISO or DateTime-parseable)
+- `Date de fin` — end date/time
+- `Categorie` — category (rows with "9 Referents" or similar are skipped)
+- `Statut d affectation` — assignment status
 
-### 3. Output Structure
+Ensure your CSV uses these exact header strings. If your source uses accented headers (e.g., `Prénom`), update the CSV or the loader to match.
+
+**Filters applied by the loader**
+
+- Skips rows where `Categorie` contains referent information (e.g. "9 Referents").
+- Skips statuses like `N'est pas applicable` or `En attente d affectation`.
+
+**Output layout**
+
+Generated files are placed under `planning/` with sanitized mission names:
+
 ```
 planning/
-├── mission_name_1/
-│   ├── 2025-06-01.pdf
-│   ├── 2025-06-02.pdf
-│   └── ...
-├── mission_name_2/
-│   ├── 2025-06-01.pdf
-│   └── ...
-└── ...
+├── accueil/
+│   └── 2025-06-01.pdf
+└── autres-missions/
+    └── 2025-06-01.pdf
 ```
 
-Mission names are sanitized (lowercased, special characters removed) for folder names.
+Each PDF is a landscape A4 page with an hourly timeline and colored bars per-assignment. When many people are present, additional pages are created.
 
-## Usage
+**Configuration**
 
-1. Place your CSV file in the same directory as `script.rb` (or update `INPUT_CSV` in `script.rb`)
-2. Update `INPUT_CSV` constant if your file has a different name
-3. Run the script:
-   ```bash
-   ruby script.rb
-   ```
-4. Find generated PDFs in the `planning/` directory
+Most configuration values (time scale, margins, output directory) are defined near the top of `script.rb`. Edit those constants to tune layout:
 
-## Features
-
-### Logical Days
-The script uses 8 AM to 8 AM "logical days" rather than midnight-to-midnight. This is practical for events that run late into the night.
-
-### Time Clipping
-If a shift spans multiple days, only the portion within each logical day is shown on that day's PDF.
-
-### Multi-page Support
-When a mission has more than 22 volunteers on a single day, the script automatically creates additional pages with repeated headers.
-
-## Customization
-
-### Adjusting Time Scale
-To make the timeline more/less compressed, modify `MINUTES_PER_PIXEL`:
-- Lower values = more compressed (more time fits on page)
-- Higher values = more expanded (easier to read short shifts)
-
-### Filtering Different Days
-Currently, the script has a debug filter on line 166:
-```ruby
-next unless day.to_s == "2025-06-01"
-```
-Remove or modify this line to generate PDFs for all days or different specific days.
-
-## Troubleshooting
-
-### "Cannot parse date" errors
-Ensure all date fields in Excel are properly formatted as dates/times, not text.
-
-### Missing PDFs
-Check that:
-- Assignments exist for the mission/day combination
-- Status fields don't filter out all assignments
-- The debug filter on line 166 isn't blocking output
-
-### Overlapping text
-If volunteer names are too long, increase `LEFT_MARGIN` to provide more space.
+- `INPUT_CSV` — path to CSV file
+- `OUTPUT_DIR` — where PDFs are written (default: `planning`)
+- `MINUTES_PER_PIXEL`, `ROW_HEIGHT`, `LEFT_MARGIN`, `TIME_STEP_MINUTES` — layout tuning
