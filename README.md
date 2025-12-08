@@ -43,3 +43,16 @@ systemctl --user status pelpass.service
 # Follow the service logs
 journalctl --user -u pelpass.service -f
 ```
+
+Update code on the server:
+
+```bash
+cd ~/pelpass_planning_pdf
+git pull origin main
+bundle install
+systemctl --user restart pelpass.service
+```
+
+## Tests
+
+TODO
