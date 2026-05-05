@@ -26,14 +26,15 @@ module Planning
         next if start_time.nil? || end_time.nil?
 
         email = row["E-mail"].gsub("<html><u>", "").gsub("</u></html>", "")
-        name = "#{row["Prénom"]} #{row["Nom"]}".strip
+        firstname = row["Prénom"]
+        name = "#{firstname} #{row["Nom"]}".strip
         phone = (row["Numéro de téléphone"] || "").delete(" ")
         lastname = row["Nom"]
 
         mission = row["Mission"]
         missions[mission] << {
           start: start_time, end: end_time, email: email, name: name,
-          phone: phone, lastname: lastname
+          firstname: firstname, phone: phone, lastname: lastname
         }
       end
 
@@ -67,7 +68,8 @@ module Planning
             {
               start: [t[:start], day_start].max,
               end: [t[:end], day_end].min,
-              email: t[:email], name: t[:name], lastname: t[:lastname], phone: t[:phone]
+              email: t[:email], name: t[:name], firstname: t[:firstname],
+              lastname: t[:lastname], phone: t[:phone]
             }
           end
 

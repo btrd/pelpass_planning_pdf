@@ -3,6 +3,7 @@ require "csv"
 require "zip"
 require_relative "data_loader"
 require_relative "pdf_generator"
+require_relative "csv_generator"
 
 module Planning
   class Generator
@@ -27,11 +28,12 @@ module Planning
     def run
       zip_path = "planning_#{Time.now.strftime("%Y-%m-%d_%H-%M-%S")}.zip"
 
-      puts "Generating PDFs and writing ZIP to #{zip_path}"
+      puts "Generating PDFs and CSVs, writing ZIP to #{zip_path}"
       pdfs = Planning::PdfGenerator.new(@missions).generate_all
+      csvs = Planning::CsvGenerator.new(@missions).generate_all
 
       Zip::OutputStream.open(zip_path) do |zip|
-        pdfs.each do |path, content|
+        pdfs.merge(csvs).each do |path, content|
           zip.put_next_entry(path)
           zip.write(content)
         end

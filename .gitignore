@@ -4,4 +4,5 @@
 *.numbers
 .DS_Store
 planning
+planning_*
 *.zip

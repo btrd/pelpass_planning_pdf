@@ -44,6 +44,10 @@ module Planning
       "ß" => "ss"
     }.freeze
 
+    def format_phone(phone)
+      phone.gsub(/(\d{2})(?=\d)/, '\1 ')
+    end
+
     def safe_text(str)
       str.to_s.encode("Windows-1252", invalid: :replace, undef: :replace, replace: "").encode("UTF-8")
     end
@@ -99,7 +103,7 @@ module Planning
         end
 
         pdf.text_box(
-          safe_text("#{tasks[0][:phone]} - #{tasks[0][:name]}"),
+          safe_text("#{format_phone(tasks[0][:phone])} - #{tasks[0][:name]}"),
           at: [0, y],
           width: LEFT_MARGIN - 10,
           height: ROW_HEIGHT,
