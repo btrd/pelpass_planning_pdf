@@ -55,4 +55,6 @@ systemctl --user restart pelpass.service
 
 ## Tests
 
-TODO
+```bash
+bundle exec rake test
+```

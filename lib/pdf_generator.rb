@@ -1,18 +1,17 @@
 require "prawn"
 require "fileutils"
 
-MINUTES_PER_PIXEL = 1.7
-ROW_HEIGHT = 20
-LEFT_MARGIN = 200
-TIME_STEP_MINUTES = 60
-MAX_BY_PAGE = 22
-COLORS = %w[007ACC FFC107 4CAF50 E91E63 9C27B0 FF5722 795548 3F51B5]
-
 # Suppress Prawn font warning
 Prawn::Fonts::AFM.hide_m17n_warning = true
 
 module Planning
   class PdfGenerator
+    MINUTES_PER_PIXEL = 1.7
+    ROW_HEIGHT = 20
+    LEFT_MARGIN = 200
+    TIME_STEP_MINUTES = 60
+    MAX_BY_PAGE = 22
+    COLORS = %w[007ACC FFC107 4CAF50 E91E63 9C27B0 FF5722 795548 3F51B5].freeze
     def initialize(missions, output_dir)
       @missions = missions
       @output_dir = output_dir
@@ -35,9 +34,21 @@ module Planning
     private
 
     # Sanitize mission name to be filesystem-safe
+    TRANSLITERATIONS = {
+      "à" => "a", "â" => "a", "ä" => "a", "á" => "a", "ã" => "a", "å" => "a", "æ" => "ae",
+      "ç" => "c",
+      "è" => "e", "é" => "e", "ê" => "e", "ë" => "e",
+      "î" => "i", "ï" => "i", "í" => "i", "ì" => "i",
+      "ñ" => "n",
+      "ô" => "o", "ö" => "o", "ó" => "o", "ò" => "o", "õ" => "o", "ø" => "o", "œ" => "oe",
+      "ù" => "u", "û" => "u", "ü" => "u", "ú" => "u",
+      "ÿ" => "y",
+      "ß" => "ss"
+    }.freeze
+
     def sanitize_name(name)
       name.to_s.downcase
-        .tr("éèêëàâäîïôöùûüç", "eeeeaaaiioouuuc")
+        .gsub(/[^\x00-\x7F]/) { |c| TRANSLITERATIONS[c] || "" }
         .gsub(/[^a-z0-9-]+/, "_").squeeze("_")
         .gsub(/^_|_$/, "")
     end

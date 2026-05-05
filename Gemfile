@@ -1,5 +1,6 @@
 source "https://rubygems.org"
 
+gem "csv"
 gem "prawn"
 gem "rubyzip"
 gem "sinatra"

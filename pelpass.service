@@ -6,7 +6,7 @@ After=network.target
 Type=simple
 WorkingDirectory=/home/jean/pelpass_planning_pdf
 Environment="APP_ENV=production"
-ExecStart=ruby server.rb
+ExecStart=bundle exec ruby server.rb
 Restart=always
 RestartSec=1
 StandardOutput=journal

@@ -15,12 +15,12 @@ module Planning
 
         start_time = begin
           DateTime.parse(row["Date de début"])
-        rescue
+        rescue ArgumentError, TypeError
           nil
         end
         end_time = begin
           DateTime.parse(row["Date de fin"])
-        rescue
+        rescue ArgumentError, TypeError
           nil
         end
         next if start_time.nil? || end_time.nil?
