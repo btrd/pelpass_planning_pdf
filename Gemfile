@@ -9,6 +9,7 @@ gem "rackup"
 gem "puma"
 
 group :development, :test do
+  gem "irb"
   gem "minitest"
   gem "rake"
 end

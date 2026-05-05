@@ -1,10 +1,8 @@
 require "open-uri"
 require "csv"
-require "debug"
-require "fileutils"
+require "zip"
 require_relative "data_loader"
 require_relative "pdf_generator"
-require_relative "zip_file_generator"
 
 module Planning
   class Generator
@@ -27,18 +25,19 @@ module Planning
     end
 
     def run
-      output_dir = "planning_#{Time.now.strftime("%Y-%m-%d_%H-%M-%S")}"
+      zip_path = "planning_#{Time.now.strftime("%Y-%m-%d_%H-%M-%S")}.zip"
 
-      puts "Generating PDFs into #{output_dir}/"
-      Planning::PdfGenerator.new(@missions, output_dir).generate_all
+      puts "Generating PDFs and writing ZIP to #{zip_path}"
+      pdfs = Planning::PdfGenerator.new(@missions).generate_all
 
-      puts "Generating ZIP file #{output_dir}.zip"
-      Planning::ZipFileGenerator.new(output_dir, "#{output_dir}.zip").write
+      Zip::OutputStream.open(zip_path) do |zip|
+        pdfs.each do |path, content|
+          zip.put_next_entry(path)
+          zip.write(content)
+        end
+      end
 
-      "#{output_dir}.zip"
-    ensure
-      puts "Cleaning up temporary folder #{output_dir}/"
-      FileUtils.rm_rf(output_dir)
+      zip_path
     end
   end
 end

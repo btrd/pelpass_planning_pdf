@@ -6,4 +6,8 @@ Rake::TestTask.new(:test) do |t|
   t.verbose = true
 end
 
+task :console do
+  exec "bundle exec irb -r ./lib/generator"
+end
+
 task default: :test

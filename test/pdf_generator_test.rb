@@ -3,7 +3,7 @@ require_relative "../lib/pdf_generator"
 
 class PdfGeneratorSanitizeNameTest < Minitest::Test
   def sanitize(name)
-    Planning::PdfGenerator.new({}, "").send(:sanitize_name, name)
+    Planning::PdfGenerator.new({}).send(:sanitize_name, name)
   end
 
   def test_ascii_passthrough

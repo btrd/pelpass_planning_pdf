@@ -25,10 +25,13 @@ Start the server:
 ruby server.rb
 ```
 
-Generate zip file from CSV path:
+Generate zip file from CSV path or URL:
 
 ```ruby
 Planning::Generator.new(path: "7074-paye-ton-noel-19---2025.csv").run
+
+url = "https://api.weezevent.com/crew/export/organization/{org_id}/event/{event_id}/assignments"
+Planning::Generator.new(url: url).run
 ```
 
 ## Run in production
