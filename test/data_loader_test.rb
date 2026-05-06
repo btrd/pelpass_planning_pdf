@@ -4,7 +4,7 @@ require_relative "../lib/data_loader"
 
 class DataLoaderTest < Minitest::Test
   def make_csv(rows)
-    headers = ["Statut d'affectation", "Date de début", "Date de fin", "E-mail", "Prénom", "Nom", "Numéro de téléphone", "Mission"]
+    headers = ["Statut d'affectation", "Date de début", "Date de fin", "E-mail", "Prénom", "Nom", "Numéro de téléphone", "Mission", "Quel est le pronom utilisé (il / elle / iel ....) ?"]
     CSV.parse([headers.join(","), *rows.map { |r| r.join(",") }].join("\n"), headers: true)
   end
 

@@ -5,7 +5,7 @@ require_relative "../lib/csv_generator"
 
 class CsvGeneratorTest < Minitest::Test
   def make_missions(rows)
-    headers = ["Statut d'affectation", "Date de début", "Date de fin", "E-mail", "Prénom", "Nom", "Numéro de téléphone", "Mission"]
+    headers = ["Statut d'affectation", "Date de début", "Date de fin", "E-mail", "Prénom", "Nom", "Numéro de téléphone", "Mission", "Quel est le pronom utilisé (il / elle / iel ....) ?"]
     csv = CSV.parse([headers.join(","), *rows.map { |r| r.join(",") }].join("\n"), headers: true)
     Planning::DataLoader.new(csv).load_missions
   end
@@ -71,6 +71,15 @@ class CsvGeneratorTest < Minitest::Test
     assert_equal "Smith", rows[0]["nom"]
     assert_equal "06 00 00 00 01", rows[0]["téléphone"]
     assert_equal "a@ex.com", rows[0]["email"]
+  end
+
+  def test_pronom_column_present_in_csv
+    missions = make_missions([
+      ["Affecté", "2024-06-10 09:00:00", "2024-06-10 17:00:00", "a@ex.com", "Alice", "Smith", "0600000001", "Accueil", "elle"]
+    ])
+    result = Planning::CsvGenerator.new(missions).generate_all
+    rows = CSV.parse(result["2024-06-10.csv"], headers: true)
+    assert_equal "elle", rows[0]["pronom"]
   end
 
   def test_empty_missions_returns_no_csvs

@@ -28,6 +28,7 @@ module Planning
               lastname: tasks[0][:lastname],
               phone: tasks[0][:phone],
               email: email,
+              pronom: tasks[0][:pronom],
               missions: []
             }
 
@@ -44,9 +45,9 @@ module Planning
 
     def generate_csv(volunteers)
       CSV.generate do |csv|
-        csv << ["prénom", "nom", "téléphone", "email", "missions"]
+        csv << ["prénom", "pronom", "nom", "téléphone", "email", "missions"]
         volunteers.values.sort_by { |v| v[:lastname] }.each do |v|
-          csv << [v[:firstname], v[:lastname], format_phone(v[:phone]), v[:email], v[:missions].join(", ")]
+          csv << [v[:firstname], v[:pronom], v[:lastname], format_phone(v[:phone]), v[:email], v[:missions].join(", ")]
         end
       end
     end

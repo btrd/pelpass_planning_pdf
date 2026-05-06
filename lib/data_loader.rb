@@ -30,11 +30,12 @@ module Planning
         name = "#{firstname} #{row["Nom"]}".strip
         phone = (row["Numéro de téléphone"] || "").delete(" ")
         lastname = row["Nom"]
+        pronom = row["Quel est le pronom utilisé (il / elle / iel ....) ?"] || ""
 
         mission = row["Mission"]
         missions[mission] << {
           start: start_time, end: end_time, email: email, name: name,
-          firstname: firstname, phone: phone, lastname: lastname
+          firstname: firstname, phone: phone, lastname: lastname, pronom: pronom
         }
       end
 
@@ -69,7 +70,7 @@ module Planning
               start: [t[:start], day_start].max,
               end: [t[:end], day_end].min,
               email: t[:email], name: t[:name], firstname: t[:firstname],
-              lastname: t[:lastname], phone: t[:phone]
+              lastname: t[:lastname], phone: t[:phone], pronom: t[:pronom]
             }
           end
 
